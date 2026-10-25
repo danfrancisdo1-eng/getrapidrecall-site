@@ -17,6 +17,7 @@ from pathlib import Path
 SITE = "https://getrapidrecall.com"
 DOMAIN = "getrapidrecall.com"
 APP_STORE_ID = ""                 # e.g. "6740000000" from App Store Connect > App Information > Apple ID
+TESTFLIGHT_URL = ""               # public beta link, e.g. "https://testflight.apple.com/join/AbCd1234"
 SUPPORT_EMAIL = "support@getrapidrecall.com"
 BUTTONDOWN_USER = "rapidrecall"   # Buttondown newsletter username
 PLAUSIBLE = True                  # cookieless analytics (prod only)
@@ -28,7 +29,10 @@ SRC = ROOT / "src"
 PREVIEW = "--preview" in sys.argv
 ALLOW_TBD = "--allow-tbd" in sys.argv
 OUT = ROOT / ("preview" if PREVIEW else "docs")
-LAUNCHED = bool(APP_STORE_ID) or PREVIEW   # preview shows the launch layout with the badge
+LAUNCHED = bool(APP_STORE_ID)
+TF_LINK = TESTFLIGHT_URL or ("https://testflight.apple.com/join/PREVIEW" if PREVIEW else "")
+BETA = bool(TF_LINK) and not LAUNCHED   # beta CTA shows until the App Store launch
+MAILTO = f'<a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>'
 
 LOGO = '<img src="/assets/logo-96.png" width="36" height="36" alt="">'
 
@@ -38,9 +42,35 @@ BADGE = (f'<a class="badge-link" href="{APP_URL}" aria-label="Download RapidReca
 
 if LAUNCHED:
     CTA_HERO = BADGE + '\n        <span class="cta-note">Free to download · iPhone</span>'
+elif BETA:
+    CTA_HERO = (f'<a class="btn" href="{TF_LINK}">Join the iPhone beta</a>\n'
+                '        <a class="btn btn-ghost" href="#beta">How the beta works</a>\n'
+                '        <span class="soon">Free beta through Apple\'s TestFlight app · App Store launch coming soon</span>')
 else:
     CTA_HERO = ('<a class="btn" href="#updates">Get launch updates</a>\n'
                 '        <span class="soon">Coming soon to the App Store</span>')
+
+TESTFLIGHT_APP = "https://apps.apple.com/app/testflight/id899247664"
+BETA_SECTION = f'''<section class="band beta" id="beta" aria-labelledby="beta-title">
+  <div class="wrap split">
+    <div class="stack">
+      <p class="eyebrow">Beta testers</p>
+      <h2 id="beta-title">Try RapidRecall AI before it launches</h2>
+      <p class="muted measure">The beta is free and runs through TestFlight, Apple's app for testing new iPhone apps. In-app purchases in the beta are test purchases, so you're never charged. Tell us what works and what doesn't, and you'll help shape the app before it reaches the App Store.</p>
+      <div class="cta-row"><a class="btn" href="{TF_LINK}">Join the iPhone beta</a></div>
+    </div>
+    <ol class="beta-steps">
+      <li><strong>Install TestFlight.</strong> Get Apple's free <a href="{TESTFLIGHT_APP}">TestFlight app</a> from the App Store.</li>
+      <li><strong>Open the invite on your iPhone.</strong> Tap <a href="{TF_LINK}">Join the iPhone beta</a> on your phone. It opens in TestFlight.</li>
+      <li><strong>Tap Accept, then Install.</strong> RapidRecall AI appears on your home screen like any other app.</li>
+      <li><strong>Send feedback.</strong> Take a screenshot in the app and TestFlight asks if you want to send it to us, or email {MAILTO}.</li>
+    </ol>
+  </div>
+</section>''' if BETA else ""
+
+BETA_FAQ = f'''<h3>How do I join the beta?</h3>
+      <p>Install Apple's free <a href="{TESTFLIGHT_APP}">TestFlight app</a>, then open <a href="{TF_LINK}">our beta invite</a> on your iPhone and tap Accept, then Install. Beta builds expire after 90 days; TestFlight will offer the newest build automatically.</p>
+      ''' if BETA else ""
 
 MAILTO = f'<a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>'
 EMAIL_BLOCK = (f'<div class="email-line"><code id="support-email">{SUPPORT_EMAIL}</code>'
@@ -170,6 +200,7 @@ def head(meta, css, is_home):
 
 def fill(body):
     return (body.replace("{{CTA_HERO}}", CTA_HERO).replace("{{SIGNUP_FORM}}", SIGNUP)
+                .replace("{{BETA_SECTION}}", BETA_SECTION).replace("{{BETA_FAQ}}", BETA_FAQ)
                 .replace("{{SUPPORT_EMAIL_TEXT}}", MAILTO).replace("{{SUPPORT_EMAIL_BLOCK}}", EMAIL_BLOCK))
 
 
@@ -234,7 +265,7 @@ def main():
             '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             + "".join(f"  <url><loc>{SITE}{u}</loc></url>\n" for u in urls) + "</urlset>\n")
 
-    print(f"Built {OUT.name}/  (mode: {'launch' if LAUNCHED else 'coming soon'})")
+    print(f"Built {OUT.name}/  (mode: {'launch' if LAUNCHED else 'beta' if BETA else 'coming soon'})")
     if tbd_report:
         print(f"\n{len(tbd_report)} items still to confirm:")
         for n, t in tbd_report:
