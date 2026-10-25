@@ -17,7 +17,7 @@ from pathlib import Path
 SITE = "https://getrapidrecall.com"
 DOMAIN = "getrapidrecall.com"
 APP_STORE_ID = ""                 # e.g. "6740000000" from App Store Connect > App Information > Apple ID
-TESTFLIGHT_URL = ""               # public beta link, e.g. "https://testflight.apple.com/join/AbCd1234"
+TESTFLIGHT_URL = "https://testflight.apple.com/join/1Rx2KdWn"               # public beta link, e.g. "https://testflight.apple.com/join/AbCd1234"
 SUPPORT_EMAIL = "support@getrapidrecall.com"
 BUTTONDOWN_USER = "rapidrecall"   # Buttondown newsletter username
 PLAUSIBLE = True                  # cookieless analytics (prod only)
